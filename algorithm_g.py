@@ -77,8 +77,9 @@ class DNA():
     return selected
   
   def crossover(self, selection):
+    childs = []
     # Probability for each element of the list [0.25, 0.50, 0.75, 1.00]
-    p_crossover = [0.25, 0.50, 0.75, 1.0]
+    p_crossover = [-1, 0.25, 0.50, 0.75]
     
     cut = np.random.uniform(0, 1)
     closest_index = min(range(len(p_crossover)), key=lambda i: abs(p_crossover[i] - cut))
@@ -86,10 +87,18 @@ class DNA():
     print("Closest index: ", closest_index)
     print(selection[0][:closest_index])
     print(selection[1][closest_index:])
-    
-    return selection[0][:closest_index] + selection[1][closest_index:]
 
-  
+    childs.append(selection[0][:closest_index] + selection[1][closest_index:])
+    childs.append(selection[1][:closest_index] + selection[0][closest_index:])
+    
+    return childs
+
+  #def mutation(self, childs):
+    mutation_probability = 0.1
+    for i in range(len(childs)):
+      pass
+    return childs
+
   #def reproduction(self, population, selected):
     point = 0
     father = []
@@ -134,7 +143,12 @@ def main():
   print(selected2)
 
   crossover = model.crossover(selected1)
-  print(crossover)
+  #print(crossover)
+  crossover2 = model.crossover(selected2)
+  #print(crossover2)
+  crossover_def = crossover + crossover2
+  print(crossover_def)
+
 
 
 
