@@ -12,13 +12,18 @@ import random
 
 class DNA():
   #Declarated object about our model 
-  def __init__(self, target, n_individuals, n_selection, mutation_rate, n_generations, verbose = True):
+  def __init__(self, target, n_individuals, n_selection, mutation_rate, n_generations, probabilities = []):
     self.target = target
     self.n_individuals = n_individuals
     self.n_selection = n_selection
     self.mutation_rate = mutation_rate
     self.n_generations = n_generations
+    self.probabilities = probabilities
   
+  
+  def probabilityes(self, list_fitness):
+    probabilities = [i/sum(list_fitness) for i in list_fitness]
+    return probabilities
 
   def create_individual(self, min = 0, max = 9):
     individual = [random.choice(['A', 'B']) for i in range(len(self.target))]
@@ -28,30 +33,64 @@ class DNA():
     population = [self.create_individual() for i in range(self.n_individuals)]
     return population
   
-  def fitness(self, individual):
+  def fitness(self, population):
     # Evaluar el individuo
-    fitness = 0
-    for i in range(len(individual)):
-      if individual[i] == self.target[i]:
-        if i == 0:
-          fitness += 2 
-        if i == 1:
-          fitness += 2
-        if i == 2:
-          fitness += 3
-        if i == 3:
-          fitness += 1
+    list_fitness = []
+    for i in range(len(population)):
+      fitness = 0
+      for j in range(len(population[i])):
+        #ingresar a una posicion del individuo
+        if population[i][j] == self.target[j]:
+          if j == 0:
+            fitness += 2 
+          if j == 1:
+            fitness += 2
+          if j == 2:
+            fitness += 3
+          if j == 3:
+            fitness += 1
+      list_fitness.append(fitness)
         
-    return fitness
+    return list_fitness
+    # seleccionar 2 individuos por medio de las probabilidades
 
-  def selection(self, population):
-    scores = [(self.fitness(i), i) for i in range(population)]
-    scores = [i[1] for i in sorted(scores)]
+  def random_choice(self, cumulative_probabilities):
+    choice = np.random.uniform()
+    selected_index = next(i for i, p in enumerate(cumulative_probabilities) if choice < p)
+    return selected_index
 
-    selected = scores[len(scores) - self.n_selection :]
+  def selection(self, population, list_probabilities):
+    selected = []
+    remaining_population = population.copy()  # Crear una copia de la población original
+
+    for _ in range(self.n_selection):
+        cumulative_probabilities = np.cumsum(list_probabilities)
+        choice = np.random.uniform()
+        selected_index = next(i for i, p in enumerate(cumulative_probabilities) if choice < p)
+        selected_individual = remaining_population[selected_index]
+        selected.append(selected_individual)
+        remaining_population.remove(selected_individual)  # Eliminar el individuo seleccionado
+
+        # Recalcular las probabilidades y la lista de probabilidades después de cada selección
+        list_probabilities = self.probabilityes(self.fitness(remaining_population))
+
     return selected
   
-  def reproduction(self, population, selected):
+  def crossover(self, selection):
+    # Probability for each element of the list [0.25, 0.50, 0.75, 1.00]
+    p_crossover = [0.25, 0.50, 0.75, 1.0]
+    
+    cut = np.random.uniform(0, 1)
+    closest_index = min(range(len(p_crossover)), key=lambda i: abs(p_crossover[i] - cut))
+    print("Cut: ", cut)
+    print("Closest index: ", closest_index)
+    print(selection[0][:closest_index])
+    print(selection[1][closest_index:])
+    
+    return selection[0][:closest_index] + selection[1][closest_index:]
+
+  
+  #def reproduction(self, population, selected):
     point = 0
     father = []
 
@@ -64,7 +103,7 @@ class DNA():
 
     return population
   
-  def mutation(self, population):
+  #def mutation(self, population):
 
     for i in range(len(population)):
       if random.random() <= self.mutation_rate:
@@ -77,14 +116,28 @@ class DNA():
         population[i][point] = new_value
     return population
   
-  
 
 
 def main():
   #Create a list with the gen that we want
   target = ['A', 'A', 'A', 'B']
-  model = DNA(target = target,n_individuals = 15, n_selection = 4,mutation_rate=0.7, n_generations = 2 )
-  #model.create_individual()
+  model = DNA(target = target,n_individuals = 4, n_selection = 2,mutation_rate=0.7, n_generations = 2, probabilities = [])
+  p = model.create_population()
+  print(p)
+  proba = model.probabilityes(model.fitness(p))
+  print(proba)
+  selected1 = model.selection(p, proba)
+  print(selected1)
+  selected2 = model.selection(p, proba)
+  while selected1 == selected2:
+    selected2 = model.selection(p, proba)
+  print(selected2)
+
+  crossover = model.crossover(selected1)
+  print(crossover)
+
+
+
 
 
 if __name__ == '__main__':
