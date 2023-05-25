@@ -69,13 +69,6 @@ class genetic_A():
     index = list_fitness.index(best)
     return index
 
-  #dada una lista de probabilidades acumuladas y un número aleatorio, selecciona un individuo de la población
-  def random_choice(self, cumulative_probabilities):
-    choice = np.random.uniform()
-    selected_index = next(i for i, p in enumerate(cumulative_probabilities) if choice < p)
-    return selected_index
-
-
   def selection(self, population, list_probabilities):
     selected = []
     remaining_population = population.copy()  # Crear una copia de la población original
@@ -167,7 +160,7 @@ def main():
       #save the data of the first generation
       for i in range(len(p)):
         writer.writerow([p[i], model.set_fitness[0][i], model.set_probabilities[0][i]])
-  with open('genetic_data2.csv', 'a', newline='') as file:
+  with open('genetic_data2.csv', 'w', newline='') as file:
       writer = csv.writer(file)
       #save the data of the second generation
       for i in range(len(gen1)):
